@@ -1,0 +1,80 @@
+-- โหลด Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- สร้างหน้าต่างหลัก (สามารถลากเคลื่อนย้ายได้ตามปกติ)
+local Window = Rayfield:CreateWindow({
+   Name = "Seed Auto Farm & Performance",
+   LoadingTitle = "Roblox Script Hub",
+   LoadingSubtitle = "by Assistant",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- สร้าง Tab หลัก
+local MainTab = Window:CreateTab("Main Menu", 4483362458)
+
+-- ==========================================================
+-- 1. ระบบซื้อเมล็ดออโต้
+-- ==========================================================
+MainTab:CreateToggle({
+   Name = "เก็บเมล็ดออโต้ (สำหรับมือถือ/PC)",
+   CurrentValue = false,
+   Flag = "AutoCollectToggle",
+   Callback = function(Value)
+      AutoCollectSeed = Value
+      if AutoCollectSeed then
+         task.spawn(function()
+            while AutoCollectSeed do
+               -- วนหาปุ่มกด (ProximityPrompt) ทั้งหมดที่อยู่ในระยะใกล้เคียง แล้วสั่งให้ทำงานทันที
+               for _, prompt in pairs(workspace:GetDescendants()) do
+                  if prompt:IsA("ProximityPrompt") then
+                     -- สั่ง Trigger ปุ่มกดโดยไม่ต้องใช้นิ้วแตะหรือกด E
+                     fireproximityprompt(prompt)
+                  end
+               end
+               
+               -- หน่วงเวลา 300 มิลลิวินาที (0.3 วินาที)
+               task.wait(0.3)
+            end
+         end)
+      end
+   end,
+})
+
+-- ==========================================================
+-- 2. ระบบลดแล็ค
+-- ==========================================================
+MainTab:CreateButton({
+   Name = "ลดแล็ค",
+   Callback = function()
+      local Workspace = game:GetService("Workspace")
+      local Lighting = game:GetService("Lighting")
+
+      -- ลบ Texture และ Decal ในแผนที่
+      for _, v in pairs(Workspace:GetDescendants()) do
+         if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+         elseif v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+         end
+      end
+
+      -- ปิด Effect เงาและการประมวลผลแสง
+      Lighting.GlobalShadows = false
+      Lighting.FogEnd = 9e9
+      for _, v in pairs(Lighting:GetChildren()) do
+         if v:IsA("PostEffect") then
+            v.Enabled = false
+         end
+      end
+
+      Rayfield:Notify({
+         Title = "สำเร็จ!",
+         Content = "ลบ Texture และปรับแต่งความลื่นเรียบร้อยแล้ว",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
