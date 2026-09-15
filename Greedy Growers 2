@@ -1,0 +1,100 @@
+-- โหลด Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- สร้างหน้าต่างหลัก (สามารถลากเคลื่อนย้ายได้ตามปกติ)
+local Window = Rayfield:CreateWindow({
+   Name = "Seed Auto Farm & Performance",
+   LoadingTitle = "Roblox Script Hub",
+   LoadingSubtitle = "by Assistant",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- สร้าง Tab หลัก
+local MainTab = Window:CreateTab("Main Menu", 4483362458)
+
+-- ==========================================================
+-- ระบบซื้อเมล็ดออโต้
+-- ==========================================================
+local MaxDistance = 10 -- ระยะวงแคบรอบตัว (ปรับลด/เพิ่ม ได้ตามต้องการ)
+
+MainTab:CreateToggle({
+   Name = "ซื้อเมล็ดออโต้",
+   CurrentValue = false,
+   Flag = "AutoCollectToggle",
+   Callback = function(Value)
+      AutoCollectSeed = Value
+      if AutoCollectSeed then
+         task.spawn(function()
+            while AutoCollectSeed do
+               local localPlayer = game:GetService("Players").LocalPlayer
+               
+               -- ตรวจสอบว่ามีตัวละครอยู่จริงในขณะนั้น
+               if localPlayer and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                  local myPosition = localPlayer.Character.HumanoidRootPart.Position
+                  
+                  -- ค้นหาปุ่มกดทั้งหมดในเกม
+                  for _, prompt in pairs(workspace:GetDescendants()) do
+                     if prompt:IsA("ProximityPrompt") and prompt.Parent then
+                        
+                        -- คำนวณระยะห่างระหว่างตัวละครกับวัตถุ
+                        local part = prompt.Parent:IsA("BasePart") and prompt.Parent or prompt.Parent:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                           local distance = (myPosition - part.Position).Magnitude
+                           
+                           -- ทำงานเฉพาะปุ่มกดที่อยู่ในระยะที่กำหนดไว้เท่านั้น
+                           if distance <= MaxDistance then
+                              fireproximityprompt(prompt)
+                           end
+                        end
+                        
+                     end
+                  end
+               end
+               
+               -- เว้นระยะ 300 มิลลิวินาที (0.3 วินาที)
+               task.wait(0.3)
+            end
+         end)
+      end
+   end,
+})
+
+
+-- ==========================================================
+-- 2. ระบบลดแล็ค
+-- ==========================================================
+MainTab:CreateButton({
+   Name = "ลดแล็ค",
+   Callback = function()
+      local Workspace = game:GetService("Workspace")
+      local Lighting = game:GetService("Lighting")
+
+      -- ลบ Texture และ Decal ในแผนที่
+      for _, v in pairs(Workspace:GetDescendants()) do
+         if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+         elseif v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+         end
+      end
+
+      -- ปิด Effect เงาและการประมวลผลแสง
+      Lighting.GlobalShadows = false
+      Lighting.FogEnd = 9e9
+      for _, v in pairs(Lighting:GetChildren()) do
+         if v:IsA("PostEffect") then
+            v.Enabled = false
+         end
+      end
+
+      Rayfield:Notify({
+         Title = "สำเร็จ!",
+         Content = "ลบ Texture และปรับแต่งความลื่นเรียบร้อยแล้ว",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
